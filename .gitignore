@@ -1,3 +1,9 @@
+#image stuff
+critimages/*
+
+#prisma stuff
+**dev.db
+
 # Logs
 logs
 *.log

@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Jam {
+  id              Int      @id @default(autoincrement())
+  server          String  @default("noserver")
+  name            String
+  startTime       DateTime @default(now())
+  critiqueStep    CritiqueStep?
+}
+
+model User {
+  id              Int    @id @default(autoincrement())
+  name            String
+  critiqueStage   Int    @default(0)
+  settingGoal     Boolean @default(false)
+  uploadingImage  Boolean @default(false)
+  discordThread   String?
+  goals           Goal[]
+  grams           Gram[]
+  gramVids        GramVid[]
+  userId          BigInt @unique
+}
+
+model Team {
+  id              Int                   @id @default(autoincrement())
+  name            String
+  discordThread   String?
+  currentCritique CritiqueStepInstance?
+}
+
+model Gram {
+  id        Int     @id @default(autoincrement())
+  title     String
+  content   String?
+  userId      Int          @unique
+  user        User         @relation(fields: [userId], references: [id])
+}
+
+model CritiqueStep {
+  id        Int                   @id @default(autoincrement())
+  order     Int
+  stage     Int
+  name      String
+  time      DateTime
+  video     CritVideo[]
+  jamId     Int                   @unique
+  jam       Jam                   @relation(fields: [jamId], references: [id])
+  prompts   CritiquePrompt[]
+  gramVids  GramVid[]
+  instances CritiqueStepInstance?
+}
+
+model CritiquePrompt {
+  id             Int          @id @default(autoincrement())
+  text           String 
+  critiqueStepId Int
+  critiqueStep   CritiqueStep @relation(fields: [critiqueStepId], references: [id])
+}
+
+model GramVid {
+  id          Int         @id @default(autoincrement())
+  path        String     
+  critStepId  Int         @unique
+  critStep    CritiqueStep @relation(fields: [critStepId], references: [id])
+  userId      Int          @unique
+  user        User         @relation(fields: [userId], references: [id])
+}
+
+model CritiqueStepInstance {
+  teamId     Int          @unique
+  critStepId Int          @unique
+  critStep   CritiqueStep @relation(fields: [critStepId], references: [id])
+  team       Team         @relation(fields: [teamId], references: [id])
+}
+
+model CritVideo {
+  id          Int @id @default(autoincrement())
+  path        String
+  critStepId  Int          @unique
+  critStep    CritiqueStep @relation(fields: [critStepId], references: [id])
+}
+
+model Goal {
+  id            Int @id @default(autoincrement())
+  description   String
+  userId      Int          @unique
+  user        User         @relation(fields: [userId], references: [id])
+}
