@@ -5,8 +5,7 @@ import https from 'https';
 import {ChannelType} from 'discord.js';
 import concat from 'ffmpeg-concat';
 import GroupCrit from "./GroupCrit.js";
-import Bree from 'bree';
-import {Client, GatewayIntentBits} from 'discord.js';
+import VideoConstructor from "VideoConstructor";
 
 /*
     Needs a specific sharp version:
@@ -26,21 +25,8 @@ export default class CritBot {
     currentCritStep;
 
     constructor(dClient, prisma) {
-
         this.discordClient = dClient;
         this.prisma = prisma;
-
-        /*
-         //seems useful but not installed
-        this.bree = new Bree({ logger: false, jobs: 
-            [
-                { name: 'CronJobs', interval: '4h' }
-            ] 
-        });
-           
-        this.graceful = new Graceful({ brees: [this.bree] });
-        this.graceful.listen();
-        */
     }
 
     /* 
@@ -111,7 +97,6 @@ export default class CritBot {
         //prompt is whats in the crit step
         let prompt = critStepInfo.prompts[0].text;
 
-  
         //get all the users
         let users = this.prisma.User.findMany({include: { goals: true }});
 
@@ -153,24 +138,10 @@ export default class CritBot {
         
     }
 
+    //TODO: ????
     generateVideos() {
        
-
-       //For ever jammer
-        //generate solo videos 
-        // start with goal
-        // fade in video
-        // drop in a feedback text on top
        
-
-
-       // Take all the solo videos
-
-            // moosh them together
-
-        // Once all video makes
-
-
 
     }
 
@@ -333,19 +304,20 @@ export default class CritBot {
         //create a filename for the new file
         let filePath = `/generatedVideos/${this.currentCritStep.id}.mp4`;
 
-        //moosh them into one, longer vide
 
-        
-        //crunch that video in
-        await concat({
-            output: filePath,
-            videos: vidPaths,
-            transition: {
-              name: 'directionalWipe',
-              duration: 100
-            }
-          })
-          
+        //get the ???? of the last text written
+        //TODO:
+        let overlayStatements = await this.prisma.GramVid.findMany({where: { critStepId: this.currentCritStep.id } });
+
+
+        //ensure that overlaystatements and vidPaths are the same size
+        //TODO: 
+
+        //need to pass in
+            //an array of all the videos
+            //a an array of all the overlays
+        //moosh them into one, longer video
+        let vc = new VideoConstructor(vidPaths, overlayStatements);
           
         //save the path name to the database
         this.prisma.CritVideo.create({ 

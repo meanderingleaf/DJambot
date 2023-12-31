@@ -12,7 +12,8 @@ model Jam {
   server          String  @default("noserver")
   name            String
   startTime       DateTime @default(now())
-  critiqueStep    CritiqueStep?
+  currentCritStep Int
+  critiqueSteps   CritiqueStep[]
 }
 
 model User {
@@ -21,10 +22,14 @@ model User {
   critiqueStage   Int    @default(0)
   settingGoal     Boolean @default(false)
   uploadingImage  Boolean @default(false)
+  summarizing     Boolean @default(false)
   discordThread   String?
   goals           Goal[]
   grams           Gram[]
   gramVids        GramVid[]
+  critSummary     CritSummary[]
+  critGroup       UsersInCritgroups[]
+  CritMessages    CritMessage[]
   userId          BigInt @unique
 }
 
@@ -50,13 +55,24 @@ model CritiqueStep {
   name      String
   time      DateTime
   video     CritVideo[]
-  jamId     Int                   @unique
+  jamId     Int                   
   jam       Jam                   @relation(fields: [jamId], references: [id])
   prompts   CritiquePrompt[]
   gramVids  GramVid[]
+  goals     Goal[]
+  critSummary CritSummary[]
+  CritMessage CritMessage[]
   instances CritiqueStepInstance?
 }
 
+
+model Project {
+    id             Int          @id @default(autoincrement())
+    name          String
+}
+
+//this is the prompt the bot goes through to get people to respond and think
+//about what they have done
 model CritiquePrompt {
   id             Int          @id @default(autoincrement())
   text           String 
@@ -64,12 +80,16 @@ model CritiquePrompt {
   critiqueStep   CritiqueStep @relation(fields: [critiqueStepId], references: [id])
 }
 
+//These are the videos that users have uploaded to the site
 model GramVid {
   id          Int         @id @default(autoincrement())
-  path        String     
-  critStepId  Int         @unique
+  time        DateTime    @default(now())
+  path        String
+  gramPath    String      @default("-")
+  critMessages  CritMessage[]     
+  critStepId  Int         
   critStep    CritiqueStep @relation(fields: [critStepId], references: [id])
-  userId      Int          @unique
+  userId      Int          
   user        User         @relation(fields: [userId], references: [id])
 }
 
@@ -78,6 +98,19 @@ model CritiqueStepInstance {
   critStepId Int          @unique
   critStep   CritiqueStep @relation(fields: [critStepId], references: [id])
   team       Team         @relation(fields: [teamId], references: [id])
+}
+
+model CritMessage {
+  id          Int           @id @default(autoincrement())
+  time        DateTime      @default(now())
+  sender      String
+  message     String
+  gramVidID  Int
+  gramVid     GramVid       @relation(fields: [gramVidID], references: [id])
+  critStepId  Int          
+  critStep    CritiqueStep  @relation(fields: [critStepId], references: [id])
+  userId      Int          
+  user        User          @relation(fields: [userId], references: [id])   
 }
 
 model CritVideo {
@@ -90,6 +123,31 @@ model CritVideo {
 model Goal {
   id            Int @id @default(autoincrement())
   description   String
-  userId      Int          @unique
+  userId      Int          
   user        User         @relation(fields: [userId], references: [id])
+  critStepId Int          
+  critStep   CritiqueStep @relation(fields: [critStepId], references: [id])
+}
+
+model CritSummary {
+  id            Int @id @default(autoincrement())
+  description   String
+  userId      Int          
+  user        User         @relation(fields: [userId], references: [id])
+  critStepId Int          
+  critStep   CritiqueStep @relation(fields: [critStepId], references: [id])
+}
+
+model CritGroup {
+  id          Int @id @default(autoincrement())         
+  users       UsersInCritgroups[]  
+}
+
+model UsersInCritgroups {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int // relation scalar field (used in the `@relation` attribute above)
+  critGroup   CritGroup @relation(fields: [critGroupId], references: [id])
+  critGroupId Int // relation scalar field (used in the `@relation` attribute above)
+
+  @@id([userId, critGroupId])
 }
